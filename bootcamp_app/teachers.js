@@ -7,7 +7,10 @@ const pool = new Pool({
   database: 'bootcampx'
 });
 
-console.log(`Querying database for ${process.argv[2]}`);
+const cohortName = process.argv[2];
+// Store all potentially malicious values in an array.
+const values = [`%${cohortName}%`];
+
 pool
   .query(
     `
@@ -17,11 +20,9 @@ from assistance_requests
   on students.id = assistance_requests.student_id
   join cohorts on students.cohort_id = cohorts.id
   join teachers on teachers.id = assistance_requests.teacher_id
-where cohorts.name like '${process.argv[2]}'
-order by teacher_name;
-
-
-`
+where cohorts.name like $1
+order by teacher_name;`,
+    values
   )
   .then((res) => {
     res.rows.forEach((row) => console.log(`${row.name}: ${row.teacher_name}`));
